@@ -399,19 +399,25 @@
       document.getElementById("comp-sanctity").textContent = compareToAverage(scores.sanctity, 12.6);
 
       // ざっくりリベラル/保守寄りコメント
-      const libBlock = scores.care + scores.fairness;
-      const consBlock = scores.loyalty + scores.authority + scores.sanctity;
-      let summary = `「傷つけないこと＋公平性」の合計：${libBlock} 点 ／ 「忠誠＋権威＋神聖さ」の合計：${consBlock} 点。\n`;
+      // リベラル側の基盤: 傷つけないこと・公平性
+      // 保守側の基盤: 内集団への忠誠・権威への敬意・神聖さ
+      const libAvg = (scores.care + scores.fairness) / 2;
+      const consAvg = (scores.loyalty + scores.authority + scores.sanctity) / 3;
 
-      if (libBlock - consBlock > 6) {
+      let summary = `「傷つけないこと＋公平性」の平均値: ${libAvg.toFixed(2)} ／ 「忠誠＋権威＋神聖さ」の平均値: ${consAvg.toFixed(2)}。\n`;
+
+      const diff = libAvg - consAvg;
+
+      if (diff > 0.5) {
         summary += "どちらかと言えば、リベラル寄りの価値観に重心がある可能性があります。";
-      } else if (consBlock - libBlock > 6) {
+      } else if (diff < -0.5) {
         summary += "どちらかと言えば、保守寄りの価値観に重心がある可能性があります。";
       } else {
         summary += "リベラル寄り・保守寄りのどちらかに大きく偏っているというよりは、比較的バランス型の傾向かもしれません。";
       }
 
       document.getElementById("orientation-summary").textContent = summary;
+
 
       resultsDiv.style.display = "block";
     });
