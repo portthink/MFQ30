@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>モラル・ファウンデーションズ・クエスチョネア（MFQ30）簡易診断</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+      padding: 1.5rem;
+      max-width: 960px;
+      margin: 0 auto;
+      background: #fafafa;
+      color: #222;
+    }
+    h1, h2, h3 {
+      margin-top: 1.4em;
+      margin-bottom: 0.4em;
+    }
+    h1 {
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .scale-description {
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .question {
+      margin-bottom: 0.9rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px dashed #eee;
+    }
+    .question:last-child {
+      border-bottom: none;
+    }
+    .question-text {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 1rem;
+      font-size: 0.9rem;
+    }
+    .options label {
+      white-space: nowrap;
+    }
+    .section-title {
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.6rem 1.4rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn:hover {
+      filter: brightness(1.05);
+    }
+    #error {
+      color: #b91c1c;
+      margin-top: 0.5rem;
+      font-weight: 600;
+    }
+    #results {
+      margin-top: 1.5rem;
+      display: none;
+    }
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+    .result-table th,
+    .result-table td {
+      border: 1px solid #ddd;
+      padding: 0.4rem 0.6rem;
+      text-align: center;
+    }
+    .result-table th {
+      background: #f3f4f6;
+    }
+    .small-text {
+      font-size: 0.85rem;
+      color: #555;
+    }
+    .attention-warning {
+      border-left: 4px solid #f59e0b;
+      background: #fffbeb;
+      padding: 0.7rem 0.9rem;
+      margin-top: 0.8rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .note {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>モラル・ファウンデーションズ・クエスチョネア（MFQ30）簡易診断</h1>
+
+  <div class="card">
+    <p>このページでは、モラル・ファウンデーション理論にもとづく質問票（MFQ30）を用いて、あなたの道徳的価値観の傾向を簡単に可視化します。</p>
+    <p class="small-text">
+      ※本ツールは研究機関等とは無関係な個人利用向けの簡易実装です。診断結果はあくまで「参考程度」として見てください。
+    </p>
+  </div>
+
+  <form id="mfq-form">
+    <div class="card">
+      <h2>第1部：行為の評価基準について</h2>
+      <p class="scale-description">
+        ある人の行為が倫理的に正しいか間違っているかを判断するときに、次のような判断材料はあなたの考え方にどの程度関係しますか。
+        <br />
+        0：まったく関係がない ／ 1：あまり関係がない ／ 2：わずかに関係がある ／ 3：やや関係がある ／ 4：とても関係がある ／ 5：極めて関係がある
+      </p>
+
+      <div id="part1-questions"></div>
+    </div>
+
+    <div class="card">
+      <h2>第2部：文章への同意度</h2>
+      <p class="scale-description">
+        次の文を読んで、あなたがどの程度同意するかをお答えください。
+        <br />
+        0：まったく同意しない ／ 1：あまり同意しない ／ 2：どちらかといえば同意しない ／ 3：どちらかといえば同意する ／ 4：まあまあ同意する ／ 5：非常に同意する
+      </p>
+
+      <div id="part2-questions"></div>
+    </div>
+
+    <button type="button" class="btn" id="calc-btn">結果を表示する</button>
+    <div id="error"></div>
+  </form>
+
+  <div id="results" class="card">
+    <h2>結果</h2>
+    <div id="attention-message"></div>
+
+    <h3>各モラル・ファウンデーションの得点</h3>
+    <table class="result-table">
+      <thead>
+        <tr>
+          <th>尺度</th>
+          <th>あなたの得点</th>
+          <th>アメリカ人平均</th>
+          <th>比較</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>傷つけないこと（Care/Harm）</td>
+          <td id="score-care"></td>
+          <td>20.2</td>
+          <td id="comp-care"></td>
+        </tr>
+        <tr>
+          <td>公平性（Fairness/Cheating）</td>
+          <td id="score-fairness"></td>
+          <td>20.5</td>
+          <td id="comp-fairness"></td>
+        </tr>
+        <tr>
+          <td>内集団への忠誠（Loyalty/Betrayal）</td>
+          <td id="score-loyalty"></td>
+          <td>16.0</td>
+          <td id="comp-loyalty"></td>
+        </tr>
+        <tr>
+          <td>権威への敬意（Authority/Subversion）</td>
+          <td id="score-authority"></td>
+          <td>16.5</td>
+          <td id="comp-authority"></td>
+        </tr>
+        <tr>
+          <td>神聖さ・純粋さ（Sanctity/Degradation）</td>
+          <td id="score-sanctity"></td>
+          <td>12.6</td>
+          <td id="comp-sanctity"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>ざっくりした傾向</h3>
+    <p id="orientation-summary" class="small-text"></p>
+
+    <p class="note">
+      ・「傷つけないこと」と「公平性」が高めの人は、一般にリベラル寄りの価値観になりやすいと言われています。<br />
+      ・「内集団への忠誠」「権威への敬意」「神聖さ・純粋さ」が高めの人は、保守寄りの価値観になりやすいと言われています。<br />
+      ・どちらが良い悪いという話ではなく、「どの価値に重みを置きがちか」を知るための参考指標です。
+    </p>
+  </div>
+
+  <script>
+    // 質問文データ
+    const questionsPart1 = [
+      "誰かが精神的に傷ついたかどうか。",
+      "一部の人々が他とは違う扱いを受けていたかどうか。",
+      "行動に自国への愛があったかどうか。",
+      "権威に対する敬意が欠落していたかどうか。",
+      "純粋さや礼儀正しさの一般的基準に違反しているかどうか。",
+      "数学が得意であったかどうか。",
+      "弱い人や傷つきやすい人に対する配慮があったかどうか。",
+      "不公平な行動をとっていたかどうか。",
+      "自分の所属するグループに対する裏切り行為があったかどうか。",
+      "社会の伝統的なしきたりに従っていたかどうか。",
+      "気持ちの悪くなるようなことをしたかどうか。",
+      "その人が残虐であったかどうか。",
+      "誰かの権利がないがしろにされていたかどうか。",
+      "その人の行動に忠誠心が欠落していたかどうか。",
+      "ある行動によって、無秩序や混乱が生じたかどうか。",
+      "神が許さないような行動をしたかどうか。"
+    ];
+
+    const questionsPart2 = [
+      "苦しんでいる人や困っている人への思いやりの念は最大の美徳である。",
+      "政府が法律を作る際、一番重要視されるべきことは、すべての人が公平な扱いを受けることだ。",
+      "私は自分の国の歴史を誇りに思う。",
+      "子供たちは皆、権威を尊敬することの大切さを教わるべきだ。",
+      "たとえ誰も傷つかないとしても、不快極まるような行動をとるべきではない。",
+      "悪い行いよりは、良い行いをしたほうがよいに決まっている。",
+      "無防備な動物を傷つけることは、人間として最低な行動だ。",
+      "正義とは社会にとって、必要とされる大切なものだ。",
+      "たとえ家族の誰かが間違いを犯したとしても、家族を大切にする気持ちを持ち続けるべきだ。",
+      "男性と女性には、それぞれ社会の中で異なる役割がある。",
+      "自然の摂理に反するような行動は間違っている。",
+      "人間を殺すことは、どのような状況においても正当化できない。",
+      "裕福な家庭に生まれた子供が、たくさんのお金を相続し、貧乏な家庭の子供は何も相続しないというのは、道義に反すると思う。",
+      "自己表現することよりも、チームプレイヤーとして働くことの方が重要である。",
+      "もし私が兵士なら、上官の命令に納得がいかなくとも、それは自分の義務であるのだから、その命令に従うだろう。",
+      "貞節は重要で価値のある道徳的美点である。"
+    ];
+
+    // 0〜5のラジオボタンを生成
+    function createOptionsHTML(qName) {
+      const labelsPart1 = [
+        "0：まったく関係がない",
+        "1：あまり関係がない",
+        "2：わずかに関係がある",
+        "3：やや関係がある",
+        "4：とても関係がある",
+        "5：極めて関係がある"
+      ];
+      const labelsPart2 = [
+        "0：まったく同意しない",
+        "1：あまり同意しない",
+        "2：どちらかといえば同意しない",
+        "3：どちらかといえば同意する",
+        "4：まあまあ同意する",
+        "5：非常に同意する"
+      ];
+
+      const isPart1 = qName.startsWith("q") && parseInt(qName.slice(1), 10) <= 16;
+      const labels = isPart1 ? labelsPart1 : labelsPart2;
+
+      let html = '<div class="options">';
+      for (let v = 0; v <= 5; v++) {
+        html += `
+          <label>
+            <input type="radio" name="${qName}" value="${v}">
+            ${labels[v]}
+          </label>
+        `;
+      }
+      html += "</div>";
+      return html;
+    }
+
+    // 質問HTMLを差し込む
+    function renderQuestions() {
+      const part1Container = document.getElementById("part1-questions");
+      const part2Container = document.getElementById("part2-questions");
+
+      questionsPart1.forEach((text, idx) => {
+        const num = idx + 1; // 1〜16
+        const qName = "q" + num;
+        const div = document.createElement("div");
+        div.className = "question";
+        div.innerHTML = `
+          <div class="question-text">（${num}）${text}</div>
+          ${createOptionsHTML(qName)}
+        `;
+        part1Container.appendChild(div);
+      });
+
+      questionsPart2.forEach((text, idx) => {
+        const num = 17 + idx; // 17〜32
+        const qName = "q" + num;
+        const div = document.createElement("div");
+        div.className = "question";
+        div.innerHTML = `
+          <div class="question-text">（${num}）${text}</div>
+          ${createOptionsHTML(qName)}
+        `;
+        part2Container.appendChild(div);
+      });
+    }
+
+    renderQuestions();
+
+    function compareToAverage(score, avg) {
+      const diff = score - avg;
+      const absDiff = Math.abs(diff);
+      if (absDiff < 1.0) {
+        return "ほぼ同程度";
+      } else if (diff > 0) {
+        return "平均よりやや高め";
+      } else {
+        return "平均よりやや低め";
+      }
+    }
+
+    document.getElementById("calc-btn").addEventListener("click", function () {
+      const errorDiv = document.getElementById("error");
+      errorDiv.textContent = "";
+      const resultsDiv = document.getElementById("results");
+      const attentionDiv = document.getElementById("attention-message");
+      attentionDiv.innerHTML = "";
+      resultsDiv.style.display = "none";
+
+      // 回答取得
+      const responses = {};
+      for (let i = 1; i <= 32; i++) {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        if (!selected) {
+          errorDiv.textContent = "未回答の設問があります。すべての設問に回答してください。";
+          return;
+        }
+        responses[i] = parseInt(selected.value, 10);
+      }
+
+      // 注意チェック（6で0以外、または22で5以外）
+      const q6 = responses[6];
+      const q22 = responses[22];
+      const attentionFailed = (q6 !== 0) || (q22 !== 5);
+
+      if (attentionFailed) {
+        attentionDiv.innerHTML = `
+          <div class="attention-warning">
+            質問（6）または（22）の回答が、この質問票で想定されているパターンと異なっていました。<br />
+            設問をあまり読まずに答えてしまっている可能性があります。結果の解釈はあくまで割り引いて参考程度にするか、時間に余裕があれば落ち着いてもう一度回答し直してみるのもおすすめです。
+          </div>
+        `;
+      }
+
+      // 尺度ごとの質問番号
+      const foundations = {
+        care:      [1, 7, 12, 17, 23, 28],
+        fairness:  [2, 8, 13, 18, 24, 29],
+        loyalty:   [3, 9, 14, 19, 25, 30],
+        authority: [4, 10, 15, 20, 26, 31],
+        sanctity:  [5, 11, 16, 21, 27, 32]
+      };
+
+      const scores = {
+        care: 0,
+        fairness: 0,
+        loyalty: 0,
+        authority: 0,
+        sanctity: 0
+      };
+
+      for (const key in foundations) {
+        foundations[key].forEach(qNum => {
+          scores[key] += responses[qNum];
+        });
+      }
+
+      // 表示
+      document.getElementById("score-care").textContent = scores.care;
+      document.getElementById("score-fairness").textContent = scores.fairness;
+      document.getElementById("score-loyalty").textContent = scores.loyalty;
+      document.getElementById("score-authority").textContent = scores.authority;
+      document.getElementById("score-sanctity").textContent = scores.sanctity;
+
+      document.getElementById("comp-care").textContent = compareToAverage(scores.care, 20.2);
+      document.getElementById("comp-fairness").textContent = compareToAverage(scores.fairness, 20.5);
+      document.getElementById("comp-loyalty").textContent = compareToAverage(scores.loyalty, 16.0);
+      document.getElementById("comp-authority").textContent = compareToAverage(scores.authority, 16.5);
+      document.getElementById("comp-sanctity").textContent = compareToAverage(scores.sanctity, 12.6);
+
+      // ざっくりリベラル/保守寄りコメント
+      const libBlock = scores.care + scores.fairness;
+      const consBlock = scores.loyalty + scores.authority + scores.sanctity;
+      let summary = `「傷つけないこと＋公平性」の合計：${libBlock} 点 ／ 「忠誠＋権威＋神聖さ」の合計：${consBlock} 点。\n`;
+
+      if (libBlock - consBlock > 6) {
+        summary += "どちらかと言えば、リベラル寄りの価値観に重心がある可能性があります。";
+      } else if (consBlock - libBlock > 6) {
+        summary += "どちらかと言えば、保守寄りの価値観に重心がある可能性があります。";
+      } else {
+        summary += "リベラル寄り・保守寄りのどちらかに大きく偏っているというよりは、比較的バランス型の傾向かもしれません。";
+      }
+
+      document.getElementById("orientation-summary").textContent = summary;
+
+      resultsDiv.style.display = "block";
+    });
+  </script>
+</body>
+</html>
